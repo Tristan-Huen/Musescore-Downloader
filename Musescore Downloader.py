@@ -11,21 +11,30 @@ from dotenv import load_dotenv
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.edge.options import Options
 
 load_dotenv()
 
 #TO DO:
-#-Suppress window opening by Selenium
 #-Find out why https://musescore.com/user/30382151/scores/6088047 gives an invalid XPath unlike all the others.
+#-Instead of constantly deleting the svgs possibly find a way to make them tmp files?
 
 score_url = 'https://musescore.com/user/6480061/scores/6212539'
-file_dir = os.getenv('DIRECTORY')
+file_dir = os.getcwd() + '\\'
 alt_str = None
 link = None
 score_title = None
 max_pages = None
 
-driver = webdriver.Edge()
+options = Options()
+options.add_argument("--headless")
+options.add_argument("--disable-3d-apis")
+options.add_argument("window-size=1920,1080")
+options.add_experimental_option("prefs", {
+    "download.prompt_for_download": False,
+    "download.default_directory": file_dir
+})
+driver = webdriver.Edge(options=options)
 driver.get(score_url)
 
 driver.maximize_window()
@@ -35,7 +44,6 @@ html = driver.page_source
 page = requests.get(score_url)
 
 soup = BeautifulSoup(html, "html.parser")
-
 
 #Get the alt tag and link to the src for the first page of the music sheet
 for foo in soup.find_all('img', alt=True):
@@ -50,7 +58,6 @@ m = re.search('.+?(?=by)', alt_str)
 
 if m:
     score_title = m.group(0)   
-
 
 
 #Gets the max page count
